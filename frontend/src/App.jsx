@@ -1,23 +1,39 @@
 import { useState } from "react";
 
 function App() {
+  // form inputs
   const [form, setForm] = useState({
     income: "",
     creditScore: "",
     employmentStatus: "",
   });
 
+  // API response
   const [result, setResult] = useState(null);
+
+  // error handling
   const [error, setError] = useState(null);
+
+  // loading state
   const [loading, setLoading] = useState(false);
 
+  // update form fields
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // call backend API
   const handleSubmit = async () => {
+    // reset previous state
     setResult(null);
     setError(null);
+
+    // basic input validation
+    if (!form.income || !form.creditScore || !form.employmentStatus) {
+      setError({ error: "Please fill all fields" });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -35,20 +51,23 @@ function App() {
 
       const data = await response.json();
 
+      // backend returned error
       if (!response.ok) {
         setError(data);
         return;
       }
 
+      // success response
       setResult(data);
     } catch (err) {
-      console.error("Fetch error:", err);
-      setError({ error: "Request failed" });
+      // network or server issue
+      setError({ error: "Failed to connect to backend" });
     } finally {
       setLoading(false);
     }
   };
 
+  // color based on decision
   const getDecisionColor = (decision) => {
     if (decision === "APPROVE") return "green";
     if (decision === "REVIEW") return "orange";
@@ -57,10 +76,11 @@ function App() {
 
   return (
     <div style={{ padding: "30px", fontFamily: "Arial" }}>
-      <h1>AI Credit Risk Evaluator</h1>
+      <h1>Check Your Risk</h1>
 
-      {/* -------- INPUT FORM -------- */}
+      {/* INPUT SECTION */}
       <div style={{ marginBottom: "20px" }}>
+        {/* income input */}
         <div>
           <label>Income</label>
           <br />
@@ -72,6 +92,7 @@ function App() {
           />
         </div>
 
+        {/* credit score input */}
         <div style={{ marginTop: "10px" }}>
           <label>Credit Score</label>
           <br />
@@ -83,6 +104,7 @@ function App() {
           />
         </div>
 
+        {/* employment dropdown */}
         <div style={{ marginTop: "10px" }}>
           <label>Employment Status</label>
           <br />
@@ -98,6 +120,7 @@ function App() {
           </select>
         </div>
 
+        {/* submit button */}
         <button
           onClick={handleSubmit}
           disabled={loading}
@@ -105,44 +128,60 @@ function App() {
         >
           {loading ? "Evaluating..." : "Evaluate"}
         </button>
+
+        {/* loading indicator */}
+        {loading && <p>Analyzing credit risk...</p>}
       </div>
 
-      {/* -------- RESULT -------- */}
+      {/* RESULT SECTION */}
       {result && !error && (
-        <div style={{ borderTop: "1px solid #ccc", paddingTop: "20px" }}>
+        <div
+          style={{
+            border: "1px solid #ccc",
+            borderRadius: "10px",
+            padding: "20px",
+            marginTop: "20px",
+            backgroundColor: "#f9f9f9",
+          }}
+        >
+          {/* decision */}
           <h2 style={{ color: getDecisionColor(result.decision) }}>
             {result.decision}
           </h2>
 
+          {/* score */}
           <p>
             <strong>Risk Score:</strong>{" "}
             {(result.riskScore * 100).toFixed(0)}%
           </p>
 
+          {/* reasons */}
           <h3>Key Factors</h3>
-          <ul>
-            {result.reasons.map((r, i) => (
+          <ul style={{ listStyleType: "none", paddingLeft: "0" }}>
+            {result.reasons?.map((r, i) => (
               <li key={i}>{r}</li>
             ))}
           </ul>
 
+          {/* explanation */}
           <h3>Explanation</h3>
           <p>{result.explanation}</p>
 
+          {/* suggestions */}
           <h3>Suggestions</h3>
-          <ul>
-            {result.suggestions.map((s, i) => (
+          <ul style={{ listStyleType: "none", paddingLeft: "0" }}>
+            {result.suggestions?.map((s, i) => (
               <li key={i}>{s}</li>
             ))}
           </ul>
         </div>
       )}
 
-      {/* -------- ERROR -------- */}
+      {/* ERROR SECTION */}
       {error && (
-        <div style={{ color: "red" }}>
+        <div style={{ color: "red", marginTop: "20px" }}>
           <h3>Error</h3>
-          <pre>{JSON.stringify(error, null, 2)}</pre>
+          <p>{error.error || "Something went wrong"}</p>
         </div>
       )}
     </div>

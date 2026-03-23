@@ -4,6 +4,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 import os
 import json
@@ -19,6 +20,18 @@ if not os.getenv("OPENAI_API_KEY"):
 
 # Creating the app using FastAPI - making a web server framework ie get HTTP requests
 app = FastAPI()
+print("MAIN.PY loaded")
+
+# ---------------------------
+# CORS (for React frontend)
+# ---------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ---------------------------
 # Rate Limiter Setup
@@ -120,15 +133,15 @@ Rules:
 
 
 # #Temporary Test Endpoint - Minimal Live test for GPT directly
-# @app.get("/test-gpt")
-# def test_gpt():
-#     response = client.chat.completions.create(
-#         model="gpt-4.1-mini",
-#         messages=[{"role": "user", "content": "Say hello"}],
-#         max_tokens=20,
-#     )
+@app.get("/test-gpt")
+def test_gpt():
+    response = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[{"role": "user", "content": "Say hello"}],
+        max_tokens=20,
+    )
 
-#     return {"output": response.choices[0].message.content}
+    return {"output": response.choices[0].message.content}
 
 
 # defining the endpoint "analyze" ie exposing POST http://localhost:8000/analyze
