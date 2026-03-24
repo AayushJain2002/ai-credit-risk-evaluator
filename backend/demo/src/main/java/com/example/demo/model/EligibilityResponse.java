@@ -11,10 +11,14 @@ public class EligibilityResponse {
     private String explanation;
     private List<String> reasons;
 
-    public EligibilityResponse(String decision, double riskScore, String explanation) {
+    public EligibilityResponse() {
+    }
+
+    public EligibilityResponse(String decision, double riskScore, String explanation, List<String> reasons) {
         this.decision = decision;
         this.riskScore = riskScore;
         this.explanation = explanation;
+        this.reasons = reasons;
     }
 
     public String getDecision() {
@@ -51,11 +55,11 @@ public class EligibilityResponse {
 
     @Override
     public String toString() {
-        return "EligibilityResponse {" + '\n' +
-                "decision='" + decision + '\n' +
-                "riskScore=" + riskScore + '\n' +
-                "reasons= " + reasons + '\n' +
-                "explanation= " + explanation + '\'' +
+        return "EligibilityResponse {" +
+                "decision='" + decision +
+                "riskScore=" + riskScore +
+                "reasons= " + reasons +
+                "explanation= " + explanation +
                 '}';
     }
 }
