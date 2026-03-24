@@ -3,26 +3,35 @@ By: Aayush Jain
 
 A full-stack application that combines deterministic credit risk scoring with LLM-powered explanations.
 
+---
+
 ## Overview
 
 This project demonstrates a hybrid architecture where:
 
-- A rule-based engine computes credit risk decisions
-- An LLM (OpenAI) generates natural language explanations and actionable suggestions
+* A rule-based engine computes credit risk decisions
+* An LLM (OpenAI) generates natural language explanations and actionable suggestions
+
+---
 
 ## Key Features
 
-- Deterministic credit risk scoring (income, credit score, employment)
-- Structured decision output (APPROVE / REVIEW / REJECT)
-- LLM-powered explanations grounded in system logic
-- Actionable recommendations for improving creditworthiness
-- Clean React UI for interactive evaluation
+* Deterministic credit risk scoring (income, credit score, employment)
+* Structured decision output (APPROVE / REVIEW / REJECT)
+* LLM-powered explanations grounded in system logic
+* Actionable recommendations for improving creditworthiness
+* Clean React UI for interactive evaluation
+
+---
 
 ## Architecture
 
 Frontend (React)
-→ FastAPI (scoring + LLM Layer)
-→ OpenAI API (Explanation + Suggestions)
+→ Spring Boot (Deterministic Decision Engine)
+→ FastAPI (LLM Explanation Layer)
+→ OpenAI API
+
+---
 
 ## Setup & Run (Full System)
 
@@ -50,10 +59,14 @@ cd ai-service
 python -m venv venv
 
 # Activate virtual environment
-# Windows:
+
+# Git Bash (recommended for Windows)
+source venv/Scripts/activate
+
+# Windows (PowerShell / CMD)
 venv\Scripts\activate
 
-# Mac/Linux:
+# Mac/Linux
 source venv/bin/activate
 
 # Install dependencies
@@ -69,7 +82,7 @@ FastAPI runs at:
 http://localhost:8000
 ```
 
-Swagger docs (for testing):
+Swagger docs:
 
 ```
 http://localhost:8000/docs
@@ -84,10 +97,7 @@ Open a new terminal:
 ```bash
 cd backend/demo
 
-# Build project
 ./mvnw clean install
-
-# Run Spring Boot server
 ./mvnw spring-boot:run
 ```
 
@@ -99,31 +109,30 @@ http://localhost:8080
 
 ---
 
-## 2.3 Test with Curl Command (Optional)
+## 2.3 Test with Curl (Optional)
 
-Open a new terminal:
-
-````bash
+```bash
 cd backend/demo
 
-#Run command (replace with your input values)
-curl -X POST http://localhost:8080/api/evaluate -H "Content-Type: application/json" -d '{
+curl -X POST http://localhost:8080/api/evaluate \
+-H "Content-Type: application/json" \
+-d '{
   "income": 50000,
   "creditScore": 720,
-  "employmentStatus": "employed"
+  "employmentStatus": "EMPLOYED"
 }' | python -m json.tool
+```
 
 ---
-## 3. Start Frontend (React UI)
 
-Open a new terminal:
+## 3. Start Frontend (React UI)
 
 ```bash
 cd frontend
 
 npm install
 npm run dev
-````
+```
 
 Frontend runs at:
 
@@ -135,81 +144,141 @@ http://localhost:5173
 
 ## 4. Run the Application
 
-1. Open the frontend in your browser
-2. Enter applicant details (income, credit score, employment status)
+1. Open the frontend
+2. Enter applicant details
 3. Submit the form
 4. View:
-   - Credit decision (from Spring Boot)
-   - Explanation and suggestions (from FastAPI + LLM)
+
+   * Credit decision (Spring Boot)
+   * Explanation + suggestions (FastAPI + LLM)
+
+---
+
+## Quick Start (One Command)
+
+```bash
+./start.sh
+```
+
+This script:
+
+* Activates the Python virtual environment
+* Starts FastAPI
+* Builds and runs Spring Boot
+* Launches the React frontend
+
+---
+
+## System Design Philosophy
+
+This system separates:
+
+### Deterministic Layer (Spring Boot)
+
+* Handles credit decision logic
+* Ensures consistency and auditability
+
+### AI Layer (FastAPI + LLM)
+
+* Generates explanations and suggestions
+* Does NOT control decisions
+
+### Why This Matters
+
+Most systems are either:
+
+* Black-box AI (unreliable)
+* Rigid rule engines (not interpretable)
+
+This design combines both:
+
+→ Deterministic accuracy + AI explainability
+
+---
+
+## Demo Focus
+
+This project demonstrates:
+
+* Multi-service architecture (Java + Python + React)
+* Clean separation of logic vs AI
+* Real-world applicability to lending and underwriting
+* Production-style system design (not a toy ML model)
 
 ---
 
 ## Important Notes
 
-- Start **FastAPI before Spring Boot** (Spring depends on it)
-- Ensure your `.env` file is set up in `ai-service` with your OpenAI API key
-- Do NOT commit `.env` to version control
-- Keep all three services running simultaneously during usage
+* Start **FastAPI before Spring Boot**
+* Ensure `.env` is configured in `ai-service`
+* Do NOT commit `.env`
+* Keep all services running simultaneously
+
+---
 
 ## WHY THIS MATTERS
-Traditional credit systems lack transparency. This system introduces interpretable decision-making through
-structured logic and natural language explanations
+
+Traditional credit systems lack transparency.
+This system introduces interpretable decision-making through structured logic + natural language explanations.
+
+---
 
 ## SECURITY
-API keys are stored locally in environment variables and aren't included in repo. Template file is given for guidance
+
+API keys are stored locally in environment variables and are not included in the repository.
+
+---
 
 ## Future Improvements
 
-1. What-If simulation
-2. ML based scoring
-3. User session Tracking
-4. Cloud Deployment
+1. What-if simulation
+2. ML-based scoring
+3. User session tracking
+4. Cloud deployment
+
+---
 
 ## Sample Test Cases
 
-Use the following inputs to test different decision outcomes in the system.
-
----
-
 ### APPROVE — Strong Applicants
 
-| Case          | Income | Credit Score | Employment Status |
-| ------------- | ------ | ------------ | ----------------- |
-| Case 1        | 95,000 | 780          | EMPLOYED          |
-| Case 2        | 85,000 | 760          | EMPLOYED          |
-| Case 3 (Edge) | 80,000 | 750          | EMPLOYED          |
+| Case          | Income | Credit Score | Employment |
+| ------------- | ------ | ------------ | ---------- |
+| Case 1        | 95,000 | 780          | EMPLOYED   |
+| Case 2        | 85,000 | 760          | EMPLOYED   |
+| Case 3 (Edge) | 80,000 | 750          | EMPLOYED   |
 
 ---
 
-### REVIEW — Borderline / Mixed Risk (Most Important)
+### REVIEW — Mixed Risk
 
-| Case                 | Income | Credit Score | Employment Status |
-| -------------------- | ------ | ------------ | ----------------- |
-| Case 1 (Balanced)    | 80,000 | 750          | EMPLOYED          |
-| Case 2 (Income Weak) | 65,000 | 680          | SELF_EMPLOYED     |
-| Case 3 (Credit Weak) | 70,000 | 660          | EMPLOYED          |
+| Case        | Income | Credit Score | Employment    |
+| ----------- | ------ | ------------ | ------------- |
+| Balanced    | 80,000 | 750          | EMPLOYED      |
+| Income Weak | 65,000 | 680          | SELF_EMPLOYED |
+| Credit Weak | 70,000 | 660          | EMPLOYED      |
 
 ---
 
-### REJECT — High Risk Applicants
+### REJECT — High Risk
 
-| Case                              | Income | Credit Score | Employment Status |
-| --------------------------------- | ------ | ------------ | ----------------- |
-| Case 1 (Clear Fail)               | 70,000 | 660          | EMPLOYED          |
-| Case 2 (Credit Failure)           | 40,000 | 580          | UNEMPLOYED        |
-| Case 3 (Income + Employment Risk) | 45,000 | 640          | UNEMPLOYED        |
+| Case                     | Income | Credit Score | Employment |
+| ------------------------ | ------ | ------------ | ---------- |
+| Clear Fail               | 70,000 | 660          | EMPLOYED   |
+| Credit Failure           | 40,000 | 580          | UNEMPLOYED |
+| Income + Employment Risk | 45,000 | 640          | UNEMPLOYED |
 
 ---
 
 ### Notes
 
-* Employment status values should be:
+* Employment values must be:
 
   * `EMPLOYED`
   * `UNEMPLOYED`
   * `SELF_EMPLOYED`
-* These cases are designed to demonstrate:
+
+* These cases demonstrate:
 
   * deterministic scoring behavior
-  * LLM-generated explanations across risk tiers
-
+  * LLM explanation differences across risk tiers

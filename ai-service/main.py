@@ -131,6 +131,10 @@ Rules:
             ],
         }
 
+##Root Endpoint when opening FastAPI
+@app.get("/")
+def root():
+    return{"message": "FastAPI service is running"}
 
 # #Temporary Test Endpoint - Minimal Live test for GPT directly
 @app.get("/test-gpt")
