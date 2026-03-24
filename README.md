@@ -151,11 +151,11 @@ http://localhost:5173
 - Do NOT commit `.env` to version control
 - Keep all three services running simultaneously during usage
 
-#WHY THIS MATTERS
+## WHY THIS MATTERS
 Traditional credit systems lack transparency. This system introduces interpretable decision-making through
 structured logic and natural language explanations
 
-#SECURITY
+## SECURITY
 API keys are stored locally in environment variables and aren't included in repo. Template file is given for guidance
 
 ## Future Improvements
@@ -165,50 +165,51 @@ API keys are stored locally in environment variables and aren't included in repo
 3. User session Tracking
 4. Cloud Deployment
 
-## Sample cases to run
-Approval - Case 1 - Strong
-Income: 95000
-Credit Score: 780
-Employment: employed
+## Sample Test Cases
 
-Approval - Case 2 - Relatively Strong
-Income: 85000
-Credit Score: 760
-Employment: employed
+Use the following inputs to test different decision outcomes in the system.
 
-Approval - Case 3 - edge case
-Income: 80000
-Credit Score: 750
-Employment: employed
+---
 
-Review Cases [MOST IMPORTANT]
-Case 1 (balanced)
-Income: 80000
-Credit Score: 750
-Employment: employed
+### APPROVE — Strong Applicants
 
-Case 2 (credit ok, income weak)
-Income: 65000
-Credit Score: 680
-Employment: self-employed
+| Case          | Income | Credit Score | Employment Status |
+| ------------- | ------ | ------------ | ----------------- |
+| Case 1        | 95,000 | 780          | EMPLOYED          |
+| Case 2        | 85,000 | 760          | EMPLOYED          |
+| Case 3 (Edge) | 80,000 | 750          | EMPLOYED          |
 
-Case 3 (income ok, credit weaker)
-Income: 70000
-Credit Score: 660
-Employment: employed
+---
 
-Reject cases (CLEAR FAIL)
-Case 1 (Obvious)
-Income: 70000
-Credit Score: 660
-Employment: employed
+### REVIEW — Borderline / Mixed Risk (Most Important)
 
-Case 2 (Credit Failure)
-Income: 40000
-Credit Score: 580
-Employment: unemployed
+| Case                 | Income | Credit Score | Employment Status |
+| -------------------- | ------ | ------------ | ----------------- |
+| Case 1 (Balanced)    | 80,000 | 750          | EMPLOYED          |
+| Case 2 (Income Weak) | 65,000 | 680          | SELF_EMPLOYED     |
+| Case 3 (Credit Weak) | 70,000 | 660          | EMPLOYED          |
 
-Case 3 (income + employment risk)
-Income: 45000
-Credit Score: 640
-Employment: unemployed
+---
+
+### REJECT — High Risk Applicants
+
+| Case                              | Income | Credit Score | Employment Status |
+| --------------------------------- | ------ | ------------ | ----------------- |
+| Case 1 (Clear Fail)               | 70,000 | 660          | EMPLOYED          |
+| Case 2 (Credit Failure)           | 40,000 | 580          | UNEMPLOYED        |
+| Case 3 (Income + Employment Risk) | 45,000 | 640          | UNEMPLOYED        |
+
+---
+
+### Notes
+
+* Employment status values should be:
+
+  * `EMPLOYED`
+  * `UNEMPLOYED`
+  * `SELF_EMPLOYED`
+* These cases are designed to demonstrate:
+
+  * deterministic scoring behavior
+  * LLM-generated explanations across risk tiers
+
