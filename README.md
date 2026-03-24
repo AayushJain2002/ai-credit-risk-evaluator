@@ -158,14 +158,14 @@ structured logic and natural language explanations
 #SECURITY
 API keys are stored locally in environment variables and aren't included in repo. Template file is given for guidance
 
-#Future Improvements
+## Future Improvements
 
 1. What-If simulation
 2. ML based scoring
 3. User session Tracking
 4. Cloud Deployment
 
-#Sample cases to run
+## Sample cases to run
 Approval - Case 1 - Strong
 Income: 95000
 Credit Score: 780
