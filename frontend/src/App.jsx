@@ -24,11 +24,9 @@ function App() {
 
   // call backend API
   const handleSubmit = async () => {
-    // reset previous state
     setResult(null);
     setError(null);
 
-    // basic input validation
     if (!form.income || !form.creditScore || !form.employmentStatus) {
       setError({ error: "Please fill all fields" });
       return;
@@ -37,7 +35,7 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/analyze", {
+      const response = await fetch("http://localhost:8080/api/evaluate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -49,18 +47,21 @@ function App() {
         }),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        setError({ error: "Invalid response from server" });
+        return;
+      }
 
-      // backend returned error
       if (!response.ok) {
         setError(data);
         return;
       }
 
-      // success response
       setResult(data);
     } catch (err) {
-      // network or server issue
       setError({ error: "Failed to connect to backend" });
     } finally {
       setLoading(false);
@@ -151,8 +152,7 @@ function App() {
 
           {/* score */}
           <p>
-            <strong>Risk Score:</strong>{" "}
-            {(result.riskScore * 100).toFixed(0)}%
+            <strong>Risk Score:</strong> {result.riskScore.toFixed(0)}%
           </p>
 
           {/* reasons */}

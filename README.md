@@ -50,7 +50,26 @@ cd CreditScore
 
 ## 2. Start Backend Services
 
-### 2.1 FastAPI (LLM Explanation Layer)
+### 2.1 Spring Boot (Credit Evaluation Engine)
+
+Open a new terminal:
+
+```bash
+cd backend/demo
+
+./mvnw clean install
+./mvnw spring-boot:run
+```
+
+Spring Boot runs at:
+
+```
+http://localhost:8080
+```
+
+---
+
+### 2.2 FastAPI (LLM Explanation Layer)
 
 ```bash
 cd ai-service
@@ -70,7 +89,7 @@ venv\Scripts\activate
 source venv/bin/activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r requirements.txt (first time only)
 
 # Run FastAPI server
 uvicorn main:app --reload
@@ -86,25 +105,6 @@ Swagger docs:
 
 ```
 http://localhost:8000/docs
-```
-
----
-
-### 2.2 Spring Boot (Credit Evaluation Engine)
-
-Open a new terminal:
-
-```bash
-cd backend/demo
-
-./mvnw clean install
-./mvnw spring-boot:run
-```
-
-Spring Boot runs at:
-
-```
-http://localhost:8080
 ```
 
 ---
@@ -242,32 +242,31 @@ API keys are stored locally in environment variables and are not included in the
 
 ### APPROVE — Strong Applicants
 
-| Case          | Income | Credit Score | Employment |
-| ------------- | ------ | ------------ | ---------- |
-| Case 1        | 95,000 | 780          | EMPLOYED   |
-| Case 2        | 85,000 | 760          | EMPLOYED   |
-| Case 3 (Edge) | 80,000 | 750          | EMPLOYED   |
+| Case          |  Income | Credit Score | Employment | Why
+| ------------- | ------  | ------------ | ---------- | -----------------
+| Elite         | 100,000 | 800          | EMPLOYED   | Max across all factors
+| Stable        | 85,000  | 750          | EMPLOYED   | Strong but not max
+| Edge          | 75,000  | 720          | EMPLOYED   | Barely crosses 80 threshold
 
 ---
 
 ### REVIEW — Mixed Risk
 
-| Case        | Income | Credit Score | Employment    |
-| ----------- | ------ | ------------ | ------------- |
-| Balanced    | 80,000 | 750          | EMPLOYED      |
-| Income Weak | 65,000 | 680          | SELF_EMPLOYED |
-| Credit Weak | 70,000 | 660          | EMPLOYED      |
+| Case        | Income | Credit Score | Employment    | Why
+| ----------- | ------ | ------------ | ------------- | ------------
+| Balanced    | 70,000 | 700          | EMPLOYED      | Right at lower-middle
+| Income Weak | 55,000 | 730          | EMPLOYED      | Good credit, weak income
+| Credit Weak | 80,000 | 720          | SELF_EMPLOYED | Strong profile dragged by employment
 
 ---
 
 ### REJECT — High Risk
 
-| Case                     | Income | Credit Score | Employment |
-| ------------------------ | ------ | ------------ | ---------- |
-| Clear Fail               | 70,000 | 660          | EMPLOYED   |
-| Credit Failure           | 40,000 | 580          | UNEMPLOYED |
-| Income + Employment Risk | 45,000 | 640          | UNEMPLOYED |
-
+| Case                     | Income | Credit Score |  Employment   | Why
+| ------------------------ | ------ | ------------ | -----------   | -----------
+| Clear Fail               | 50,000 | 580          | SELF_EMPLOYED | Just below threshold
+| Credit Failure           | 50,000 | 650          | UNEMPLOYED    | Credit kills decision
+| Income + Employment Risk | 70,000 | 640          | SELF_EMPLOYED | All three factors weak
 ---
 
 ### Notes

@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 # test to verify key works (before full test)
 if not os.getenv("OPENAI_API_KEY"):
     raise ValueError("Missing OpenAI API Key")
@@ -27,7 +28,7 @@ print("MAIN.PY loaded")
 # ---------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # safe for demo, restrict in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,31 +49,16 @@ def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     )
 
 
-# Define input schema (validate incoming data, enforce structure, and converts JSON -> Python object)
-class Applicant(
-    BaseModel
-):  # takes json input and makes it python (parsing + validation)
-    income: int  # this becomes applicant.income
-    creditScore: int  # this becomes applicant.creditScore
-    employmentStatus: str  # this becomes applicant.employeeStatus
-
-    # STANDARDIZE EMPLOYMENT INPUT
-    @validator("employmentStatus")
-    def normalize_employment(cls, value):
-        val = value.lower().strip()
-
-        mapping = {
-            "employed": "employed",
-            "full-time": "employed",
-            "full_time": "employed",
-            "self-employed": "self_employed",
-            "self employed": "self_employed",
-            "contractor": "self_employed",
-            "unemployed": "unemployed",
-            "none": "unemployed",
-        }
-
-        return mapping.get(val, "unemployed")
+# ---------------------------
+# Request Schema (RESTORES SWAGGER BODY)
+# ---------------------------
+class AnalyzeRequest(BaseModel):
+    income: int
+    credit_score: int
+    employment_status: str
+    decision: str
+    riskScore: float
+    reasons: list[str]
 
 
 # ---------------------------
@@ -114,7 +100,6 @@ Rules:
     )
 
     raw_output = response.choices[0].message.content
-
     print("GPT RAW OUTPUT →", raw_output)
 
     # SAFE JSON PARSE (DO NOT TRUST MODEL BLINDLY)
@@ -131,12 +116,18 @@ Rules:
             ],
         }
 
-##Root Endpoint when opening FastAPI
+
+# ---------------------------
+# Root Endpoint
+# ---------------------------
 @app.get("/")
 def root():
-    return{"message": "FastAPI service is running"}
+    return {"message": "FastAPI service is running"}
 
-# #Temporary Test Endpoint - Minimal Live test for GPT directly
+
+# ---------------------------
+# Temporary Test Endpoint
+# ---------------------------
 @app.get("/test-gpt")
 def test_gpt():
     response = client.chat.completions.create(
@@ -148,83 +139,25 @@ def test_gpt():
     return {"output": response.choices[0].message.content}
 
 
-# defining the endpoint "analyze" ie exposing POST http://localhost:8000/analyze
+# ---------------------------
+# Analyze Endpoint (LLM ONLY — NO SCORING)
+# ---------------------------
 @app.post("/analyze")
-@limiter.limit("5/minute")  # 🔥 limiter applied here
-def analyze(request: Request, applicant: Applicant):
+@limiter.limit("5/minute")
+async def analyze(request: Request, payload: AnalyzeRequest):
 
-    print("Received applicant:", applicant)
+    # Convert Pydantic model → dict (Pydantic v2 safe)
+    data = payload.model_dump()
 
-    score = 0
-    reasons = []
+    print("RAW DATA RECEIVED FROM SPRING:", data)
 
-    # convert score to business decision based on income, credit score, and employment status
-
-    # credit score contribution (50%)
-    if applicant.creditScore >= 750:
-        score += 50
-    elif applicant.creditScore >= 650:
-        score += 40
-        reasons.append("Credit Score is in the moderate range (650-749)")
-    else:
-        score += 20
-        reasons.append("Credit Score is below preferred threshold (650)")
-
-    # Income contribution (30%)
-    if applicant.income >= 80000:
-        score += 30
-    elif applicant.income >= 60000:
-        score += 20
-        reasons.append("Income is in the moderate range (50000-79999)")
-    else:
-        score += 10
-        reasons.append("Income is below preferred threshold (50000)")
-
-    # Employment Contribution (20%)
-    if applicant.employmentStatus == "employed":
-        score += 20
-    elif applicant.employmentStatus == "self_employed":
-        score += 15
-        reasons.append(
-            "Employment status is self-employment, which carries moderate risk"
-        )
-    else:
-        score += 5
-        reasons.append("Employment status is high risk")
-
-    # Get score
-    print("Final Score: ", score)
-
-    # Normalize riskScore
-    riskScore = round((score / 100), 2)
-
-    # Decision Logic
-    if riskScore > 0.75:
-        decision = "APPROVE"
-    elif riskScore >= 0.5:
-        decision = "REVIEW"
-    else:
-        decision = "REJECT"
-
-    # Ensure APPROVE case has reasoning by avoiding empty explanations
-    if not reasons:
-        reasons.append("Strong performance across all evaluation factors")
-
-    # GPT Explanation (structured JSON)
-    gpt_output = generate_credit_explanation(
-        {
-            "income": applicant.income,
-            "credit_score": applicant.creditScore,
-            "employment_status": applicant.employmentStatus,
-            "decision": decision,
-            "reasons": reasons,
-        }
-    )
+    # GPT Explanation (NO SCORING HERE)
+    gpt_output = generate_credit_explanation(data)
 
     response = {
-        "decision": decision,
-        "riskScore": riskScore,
-        "reasons": reasons,
+        "decision": data["decision"],
+        "riskScore": data["riskScore"],
+        "reasons": data["reasons"],
         "explanation": gpt_output.get("explanation"),
         "suggestions": gpt_output.get("suggestions"),
     }
